@@ -1,0 +1,50 @@
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8089:80"                    # Maps port 80 in the container to port 8080 on the host
+    networks:
+      - app-network
+    volumes:
+      - nginx_data:/var/www/html     # Volume for Nginx to store files
+    environment:
+      - NGINX_ENV=production         # Sample environment variable
+    depends_on:
+      - web
+      - db
+
+  web:
+    image: httpd:latest
+    networks:
+      - app-network
+    volumes:
+      - web_data:/usr/local/apache2/htdocs    # Volume for web server storage
+    environment:
+      - APP_ENV=development                   # Sample environment variable
+    expose:
+      - "80"                                  # Expose port 80 to Nginx
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword       # Root password for MySQL
+      MYSQL_DATABASE: app_db                  # Initial database
+      MYSQL_USER: app_user                    # Non-root username
+      MYSQL_PASSWORD: app_password            # Non-root user password
+    networks:
+      - app-network
+    volumes:
+      - db_data:/var/lib/mysql                # Volume to persist MySQL data
+    expose:
+      - "3306"                                # Expose MySQL port internally
+
+networks:
+  app-network:
+    driver: bridge                            # Internal bridge network for inter-service communication
+
+volumes:
+  nginx_data:
+  web_data:
+  db_data:
